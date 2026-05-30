@@ -274,24 +274,32 @@ function show(id){
 function openRoulette(){
   const names = extractNames(document.getElementById('names').value);
   const ifr = document.getElementById('rouletteFrame');
-  // 입력창에 이름이 있으면 룰렛 입력칸에 자동으로 채워준다
-  const fill = ()=>{ try{
-    const w = ifr.contentWindow;
-    const ta = w.document.querySelector('textarea');
-    if(ta && names.length){                         // 화면 표시용
-      ta.value = names.join(',');
-      ta.dispatchEvent(new Event('input', {bubbles:true}));
-    }
-    if(names.length && w.roulette && typeof w.roulette.setMarbles==='function'){
-      w.roulette.setMarbles(names);                 // 실제 구슬 생성 (확실한 경로)
-    }
-  }catch(e){} };
-  // 물리엔진 로딩이 늦을 수 있어 한 번 더 시도
-  setTimeout(fill, 600);
-  // 프레임이 이미 로드돼 있으면 바로, 아니면 로드 후 채움
-  ifr.addEventListener('load', fill, {once:true});
-  if(ifr.contentWindow && ifr.contentWindow.document.readyState==='complete') fill();
   show('roulettePage');
+  if(!names.length) return;          // 이름 없으면 룰렛 기본값 그대로 사용
+
+  // 실제 이름을 룰렛에 반영
+  const setIt = ()=>{ try{
+    const w = ifr.contentWindow;
+    if(w && w.roulette && typeof w.roulette.setMarbles==='function'){
+      w.roulette.setMarbles(names);
+      const ta = w.document.querySelector('textarea');
+      if(ta) ta.value = names.join(',');
+      return true;
+    }
+  }catch(e){} return false; };
+
+  // 룰렛(물리엔진 포함)이 준비될 때까지 폴링 후 적용 (느린 네트워크 대비)
+  let tries = 0;
+  const waitReady = ()=>{
+    if(setIt()){
+      // 룰렛이 늦게 기본값으로 덮어쓸 수 있어 몇 번 더 적용
+      setTimeout(setIt, 700);
+      setTimeout(setIt, 1800);
+      return;
+    }
+    if(tries++ < 80) setTimeout(waitReady, 200);   // 최대 ~16초 대기
+  };
+  waitReady();
 }
 function fullscreenRoulette(){
   const ifr = document.getElementById('rouletteFrame');
