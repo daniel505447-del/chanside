@@ -152,8 +152,26 @@
         <button class="act" id="goBtn" onclick="go(false)">대진표 생성</button>
         <button class="act ghost" onclick="go(true)">🎲 랜덤</button>
       </div>
+      <div class="btns" style="margin-top:0;">
+        <button class="act gold" onclick="openRoulette()">🎡 룰렛으로 뽑기</button>
+      </div>
     </div>
     <div class="foot disp">CHAN : SIDE · BEYOND THE END</div>
+  </section>
+
+  <!-- ===== 룰렛 (lazygyu/roulette, MIT) ===== -->
+  <section id="roulettePage" class="hidden">
+    <div class="phead">
+      <button class="small" onclick="show('inputPage')">←  뒤로</button>
+      <button class="small gold" style="background:var(--gold);color:#fff;border:none"
+              onclick="importRoulette()">✅ 이 결과 가져오기</button>
+    </div>
+    <div class="wrap"><div class="ptitle">ROU<span class="gd">LETTE</span></div><div class="titbar gold"></div>
+      <div class="hint">이름이 자동 입력돼 있어요. 룰렛을 끝까지 돌린 뒤 <b>✅ 이 결과 가져오기</b>를 누르세요.</div></div>
+    <div style="padding:0 22px 16px;">
+      <iframe id="rouletteFrame" src="roulette/index.html"
+              style="width:100%; height:62vh; border:1px solid var(--cardhi); border-radius:12px; background:#000;"></iframe>
+    </div>
   </section>
 
   <!-- ===== 단판 대진표 ===== -->
@@ -239,10 +257,51 @@ function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.flo
 /* ---------- 뷰 전환 ---------- */
 const VS_SRC = "data:image/png;base64,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";
 function show(id){
-  ['inputPage','resultPage','tourneyPage','winsPage'].forEach(p=>{
+  ['inputPage','resultPage','tourneyPage','winsPage','roulettePage'].forEach(p=>{
     document.getElementById(p).classList.toggle('hidden', p!==id);
   });
   window.scrollTo(0,0);
+}
+
+/* ---------- 룰렛 통합 (lazygyu/roulette, MIT) ---------- */
+function openRoulette(){
+  const names = extractNames(document.getElementById('names').value);
+  const ifr = document.getElementById('rouletteFrame');
+  // 입력창에 이름이 있으면 룰렛 입력칸에 자동으로 채워준다
+  const fill = ()=>{ try{
+    const w = ifr.contentWindow;
+    const ta = w.document.querySelector('textarea');
+    if(ta && names.length){                         // 화면 표시용
+      ta.value = names.join(',');
+      ta.dispatchEvent(new Event('input', {bubbles:true}));
+    }
+    if(names.length && w.roulette && typeof w.roulette.setMarbles==='function'){
+      w.roulette.setMarbles(names);                 // 실제 구슬 생성 (확실한 경로)
+    }
+  }catch(e){} };
+  // 물리엔진 로딩이 늦을 수 있어 한 번 더 시도
+  setTimeout(fill, 600);
+  // 프레임이 이미 로드돼 있으면 바로, 아니면 로드 후 채움
+  ifr.addEventListener('load', fill, {once:true});
+  if(ifr.contentWindow && ifr.contentWindow.document.readyState==='complete') fill();
+  show('roulettePage');
+}
+function importRoulette(){
+  const ifr = document.getElementById('rouletteFrame');
+  let names = [];
+  try{
+    const rl = ifr.contentWindow.roulette;
+    if(rl && rl._winners){
+      names = [...rl._winners, ...(rl._marbles||[])].map(m=>m.name).filter(Boolean);
+    }
+  }catch(e){}
+  if(names.length < 2){
+    alert('먼저 룰렛을 끝까지 돌려주세요! (결과 순위가 나온 뒤에 눌러야 해요)');
+    return;
+  }
+  document.getElementById('names').value = names.join('\n');
+  show('inputPage');
+  flash('inMsg','✓ 룰렛 결과 '+names.length+'명 가져옴', 'var(--win)');
 }
 let MODE='bracket';
 function setMode(m){
