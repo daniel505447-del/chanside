@@ -121,6 +121,9 @@
   .champ .nm{font-family:"Teko","Noto Sans KR"; color:var(--gold); font-size:42px; font-weight:700; margin-top:2px;}
   .savenote{color:var(--muted); font-size:11px; padding:0 22px 12px; line-height:1.5;}
   .hidden{display:none!important;}
+  /* 전체화면 시 iframe이 화면 꽉 채우도록 (인라인 높이 덮어쓰기) */
+  #rouletteFrame:-webkit-full-screen{width:100%!important;height:100%!important;border:0;border-radius:0;}
+  #rouletteFrame:fullscreen{width:100%!important;height:100%!important;border:0;border-radius:0;}
 </style>
 </head>
 <body>
@@ -163,14 +166,18 @@
   <section id="roulettePage" class="hidden">
     <div class="phead">
       <button class="small" onclick="show('inputPage')">←  뒤로</button>
-      <button class="small gold" style="background:var(--gold);color:#fff;border:none"
-              onclick="importRoulette()">✅ 이 결과 가져오기</button>
+      <span>
+        <button class="small" onclick="fullscreenRoulette()">⛶ 전체화면</button>
+        <button class="small gold" style="background:var(--gold);color:#fff;border:none"
+                onclick="importRoulette()">✅ 결과 가져오기</button>
+      </span>
     </div>
     <div class="wrap"><div class="ptitle">ROU<span class="gd">LETTE</span></div><div class="titbar gold"></div>
-      <div class="hint">이름이 자동 입력돼 있어요. 룰렛을 끝까지 돌린 뒤 <b>✅ 이 결과 가져오기</b>를 누르세요.</div></div>
+      <div class="hint">이름이 자동 입력돼 있어요. 룰렛을 끝까지 돌린 뒤 <b>✅ 결과 가져오기</b>를 누르세요.
+      <br>작으면 <b>⛶ 전체화면</b>(끝나면 Esc) → 다시 결과 가져오기.</div></div>
     <div style="padding:0 22px 16px;">
-      <iframe id="rouletteFrame" src="roulette/index.html"
-              style="width:100%; height:62vh; border:1px solid var(--cardhi); border-radius:12px; background:#000;"></iframe>
+      <iframe id="rouletteFrame" src="roulette/index.html" allowfullscreen
+              style="width:100%; height:74vh; border:1px solid var(--cardhi); border-radius:12px; background:#000;"></iframe>
     </div>
   </section>
 
@@ -285,6 +292,17 @@ function openRoulette(){
   ifr.addEventListener('load', fill, {once:true});
   if(ifr.contentWindow && ifr.contentWindow.document.readyState==='complete') fill();
   show('roulettePage');
+}
+function fullscreenRoulette(){
+  const ifr = document.getElementById('rouletteFrame');
+  const fs = document.fullscreenElement || document.webkitFullscreenElement;
+  if(fs){
+    (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  }else{
+    const req = ifr.requestFullscreen || ifr.webkitRequestFullscreen || ifr.mozRequestFullScreen;
+    if(req){ req.call(ifr); }
+    else { alert('이 브라우저는 전체화면을 지원하지 않아요.'); }
+  }
 }
 function importRoulette(){
   const ifr = document.getElementById('rouletteFrame');
